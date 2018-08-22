@@ -162,10 +162,15 @@ namespace GtmExtension
             Initialize();
 
             IWpfTextView wpfTextView = editor.GetWpfTextView(textView);
+            wpfTextView.GotAggregateFocus += WpfTextView_GotAggregateFocus;
             wpfTextView.LayoutChanged += WpfTextView_LayoutChanged;
             wpfTextView.Caret.PositionChanged += Caret_PositionChanged;
 
             Update(GetFilePath(wpfTextView));
+        }
+        private void WpfTextView_GotAggregateFocus(object sender, EventArgs e)
+        {
+            Update(GetFilePath((ITextView)sender));
         }
         private void WpfTextView_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
