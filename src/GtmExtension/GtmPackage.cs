@@ -1,12 +1,16 @@
 using EnvDTE;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Process = System.Diagnostics.Process;
@@ -33,20 +37,18 @@ namespace GtmExtension
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
-    [Guid(GtmPackage.PackageGuidString)]
+    [Guid(PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)] // Load the extension when a solution is open.
-    public sealed class GtmPackage : AsyncPackage, IVsTextViewEvents
+    public sealed class GtmPackage : AsyncPackage
     {
         private string gtmExe;
         private IVsStatusbar statusBar;
-        private TextEditorEvents textEditorEvents;
+        private IVsEditorAdaptersFactoryService editor;
         private WindowEvents windowEvents;
         private DocumentEvents documentEvents;
-        private Window previousWindow;
-        private IVsTextView previousTextView;
-        private uint previousCookie;
         private IVsTextManager textManager;
+        private IWpfTextView wpfTextView;
 
         /// <summary>
         /// GtmPackage GUID string.
@@ -173,74 +175,63 @@ namespace GtmExtension
             textManager = (IVsTextManager)await GetServiceAsync(typeof(SVsTextManager));
             if (textManager == null) { throw new InvalidOperationException("No TextManager."); }
 
-            // Subscribe to events.
-            textEditorEvents = dte.Events.TextEditorEvents; // Don't get GC'ed!
-            textEditorEvents.LineChanged += TextEditorEvents_LineChanged;
+            // Get editor adapters.
+            var componentModel = (IComponentModel)await GetServiceAsync(typeof(SComponentModel));
+            if (componentModel == null) { throw new InvalidOperationException("No ComponentModel."); }
+            editor = componentModel.GetService<IVsEditorAdaptersFactoryService>();
 
+            // Subscribe to events. We keep the events objects so that they don't get GC'ed.
             windowEvents = dte.Events.WindowEvents;
             windowEvents.WindowActivated += WindowEvents_WindowActivated;
 
             documentEvents = dte.Events.DocumentEvents;
             documentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
+
+            Subscribe();
         }
 
-        private void TextEditorEvents_LineChanged(TextPoint StartPoint, TextPoint EndPoint, int Hint)
-        {
-            statusBar.SetText("Text changed: " + StartPoint.Parent.Parent.FullName + " (" + DateTime.Now.ToLongTimeString() + ").");
-        }
-        private IConnectionPoint GetConnectionPoint(IVsTextView view)
-        {
-            if (view is IConnectionPointContainer cpc)
-            {
-                Guid riid = typeof(IVsTextViewEvents).GUID;
-                cpc.FindConnectionPoint(ref riid, out IConnectionPoint cp);
-                return cp;
-            }
-            else
-            {
-                throw new InvalidOperationException("No IConnectionPointContainer.");
-            }
-        }
         private void WindowEvents_WindowActivated(Window GotFocus, Window LostFocus)
         {
+            Subscribe();
+        }
+        private string GetFilePath(ITextView textView)
+        {
+            return textView.TextBuffer.Properties.GetProperty<ITextDocument>(typeof(ITextDocument)).FilePath;
+        }
+        private void Subscribe()
+        {
             // Unsubscribe the previously focused window.
-            if (LostFocus != null && previousWindow != null)
+            if (wpfTextView != null)
             {
-                if (previousWindow != LostFocus)
-                {
-                    throw new InvalidOperationException("Unknown previous window.");
-                }
-
-                GetConnectionPoint(previousTextView).Unadvise(previousCookie);
+                wpfTextView.Caret.PositionChanged -= Caret_PositionChanged;
+                wpfTextView.LayoutChanged -= WpfTextView_LayoutChanged;
+                wpfTextView = null;
             }
 
             // Subsribe the currently focused window.
-            if (GotFocus != null)
-            {
-                previousWindow = GotFocus;
-                ErrorHandler.ThrowOnFailure(textManager.GetActiveView(0, null, out previousTextView));
-                GetConnectionPoint(previousTextView).Advise(this, out previousCookie);
-            }
+            ErrorHandler.ThrowOnFailure(textManager.GetActiveView(0, null, out IVsTextView textView));
+            wpfTextView = editor.GetWpfTextView(textView);
+            wpfTextView.Caret.PositionChanged += Caret_PositionChanged;
+            wpfTextView.LayoutChanged += WpfTextView_LayoutChanged;
+
+            Update(GetFilePath(wpfTextView));
+        }
+
+        private void WpfTextView_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
+        {
+            Update(GetFilePath(wpfTextView));
+        }
+        private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e)
+        {
+            Update(GetFilePath(e.TextView));
         }
         private void DocumentEvents_DocumentSaved(Document Document)
         {
-            statusBar.SetText("Document saved: " + Document.FullName + " (" + DateTime.Now.ToLongTimeString() + ").");
+            Update(Document.FullName);
         }
-        #endregion
-
-        #region Implementation of `IVsTextViewEvents`
-        public void OnSetFocus(IVsTextView pView) { }
-        public void OnKillFocus(IVsTextView pView) { }
-        public void OnSetBuffer(IVsTextView pView, IVsTextLines pBuffer) { }
-        public void OnChangeScrollInfo(IVsTextView pView, int iBar, int iMinUnit, int iMaxUnits, int iVisibleUnits, int iFirstVisibleUnit)
+        private void Update(string path, [CallerMemberName] string message = null)
         {
-            // TODO: Doesn't fire.
-            statusBar.SetText("Scrolling...");
-        }
-        public void OnChangeCaretLine(IVsTextView pView, int iNewLine, int iOldLine)
-        {
-            // TODO: Doesn't fire.
-            statusBar.SetText("Changing caret...");
+            statusBar.SetText(message + ": " + path + " (" + DateTime.Now.ToString("o") + ").");
         }
         #endregion
     }
