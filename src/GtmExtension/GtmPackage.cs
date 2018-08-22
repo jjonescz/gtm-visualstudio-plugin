@@ -1,12 +1,15 @@
+using EnvDTE;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Process = System.Diagnostics.Process;
 using Task = System.Threading.Tasks.Task;
 
 namespace GtmExtension
@@ -33,9 +36,17 @@ namespace GtmExtension
     [Guid(GtmPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)] // Load the extension when a solution is open.
-    public sealed class GtmPackage : AsyncPackage
+    public sealed class GtmPackage : AsyncPackage, IVsTextViewEvents
     {
         private string gtmExe;
+        private IVsStatusbar statusBar;
+        private TextEditorEvents textEditorEvents;
+        private WindowEvents windowEvents;
+        private DocumentEvents documentEvents;
+        private Window previousWindow;
+        private IVsTextView previousTextView;
+        private uint previousCookie;
+        private IVsTextManager textManager;
 
         /// <summary>
         /// GtmPackage GUID string.
@@ -143,10 +154,8 @@ namespace GtmExtension
                 return;
             }
 
-            // Show info in status bar.
-
             // Get the status bar.
-            var statusBar = (IVsStatusbar)await GetServiceAsync(typeof(SVsStatusbar));
+            statusBar = (IVsStatusbar)await GetServiceAsync(typeof(SVsStatusbar));
             if (statusBar == null) { throw new InvalidOperationException("No status bar."); }
 
             // Unfroze it if it's frozen.
@@ -156,10 +165,83 @@ namespace GtmExtension
                 ErrorHandler.ThrowOnFailure(statusBar.FreezeOutput(0));
             }
 
-            // TODO.
-            statusBar.SetText("We control the status bar now!");
+            // Get DTE.
+            var dte = (DTE)await GetServiceAsync(typeof(DTE));
+            if (dte == null) { throw new InvalidOperationException("No DTE."); }
+
+            // Get text manager.
+            textManager = (IVsTextManager)await GetServiceAsync(typeof(SVsTextManager));
+            if (textManager == null) { throw new InvalidOperationException("No TextManager."); }
+
+            // Subscribe to events.
+            textEditorEvents = dte.Events.TextEditorEvents; // Don't get GC'ed!
+            textEditorEvents.LineChanged += TextEditorEvents_LineChanged;
+
+            windowEvents = dte.Events.WindowEvents;
+            windowEvents.WindowActivated += WindowEvents_WindowActivated;
+
+            documentEvents = dte.Events.DocumentEvents;
+            documentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
         }
 
+        private void TextEditorEvents_LineChanged(TextPoint StartPoint, TextPoint EndPoint, int Hint)
+        {
+            statusBar.SetText("Text changed: " + StartPoint.Parent.Parent.FullName + " (" + DateTime.Now.ToLongTimeString() + ").");
+        }
+        private IConnectionPoint GetConnectionPoint(IVsTextView view)
+        {
+            if (view is IConnectionPointContainer cpc)
+            {
+                Guid riid = typeof(IVsTextViewEvents).GUID;
+                cpc.FindConnectionPoint(ref riid, out IConnectionPoint cp);
+                return cp;
+            }
+            else
+            {
+                throw new InvalidOperationException("No IConnectionPointContainer.");
+            }
+        }
+        private void WindowEvents_WindowActivated(Window GotFocus, Window LostFocus)
+        {
+            // Unsubscribe the previously focused window.
+            if (LostFocus != null && previousWindow != null)
+            {
+                if (previousWindow != LostFocus)
+                {
+                    throw new InvalidOperationException("Unknown previous window.");
+                }
+
+                GetConnectionPoint(previousTextView).Unadvise(previousCookie);
+            }
+
+            // Subsribe the currently focused window.
+            if (GotFocus != null)
+            {
+                previousWindow = GotFocus;
+                ErrorHandler.ThrowOnFailure(textManager.GetActiveView(0, null, out previousTextView));
+                GetConnectionPoint(previousTextView).Advise(this, out previousCookie);
+            }
+        }
+        private void DocumentEvents_DocumentSaved(Document Document)
+        {
+            statusBar.SetText("Document saved: " + Document.FullName + " (" + DateTime.Now.ToLongTimeString() + ").");
+        }
+        #endregion
+
+        #region Implementation of `IVsTextViewEvents`
+        public void OnSetFocus(IVsTextView pView) { }
+        public void OnKillFocus(IVsTextView pView) { }
+        public void OnSetBuffer(IVsTextView pView, IVsTextLines pBuffer) { }
+        public void OnChangeScrollInfo(IVsTextView pView, int iBar, int iMinUnit, int iMaxUnits, int iVisibleUnits, int iFirstVisibleUnit)
+        {
+            // TODO: Doesn't fire.
+            statusBar.SetText("Scrolling...");
+        }
+        public void OnChangeCaretLine(IVsTextView pView, int iNewLine, int iOldLine)
+        {
+            // TODO: Doesn't fire.
+            statusBar.SetText("Changing caret...");
+        }
         #endregion
     }
 }
