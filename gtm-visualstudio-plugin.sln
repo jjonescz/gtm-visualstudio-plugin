@@ -6,11 +6,29 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{4A24B859-53A8-48A9-B876-27F5225BDAC2}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitignore = .gitignore
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F9A08D81-BFF2-43B4-BDD3-7B6612DB1C12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GtmExtension", "src\GtmExtension\GtmExtension.csproj", "{E3E33776-3C5E-40E7-8983-6859B226AC71}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E3E33776-3C5E-40E7-8983-6859B226AC71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3E33776-3C5E-40E7-8983-6859B226AC71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3E33776-3C5E-40E7-8983-6859B226AC71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3E33776-3C5E-40E7-8983-6859B226AC71}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E3E33776-3C5E-40E7-8983-6859B226AC71} = {F9A08D81-BFF2-43B4-BDD3-7B6612DB1C12}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9380771B-3B57-4CED-904B-B3131F32C5AE}
