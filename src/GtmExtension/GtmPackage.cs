@@ -228,12 +228,13 @@ namespace GtmExtension
         }
         private void DocumentEvents_DocumentSaved(Document Document)
         {
-            Update(Document.FullName);
+            Update(Document.FullName, force: true);
         }
-        private void Update(string path)
+        private void Update(string path, bool force = false)
         {
             var time = DateTime.Now;
-            if (time - lastUpdate >= updateInterval ||
+            if (force ||
+                time - lastUpdate >= updateInterval ||
                 path != prevPath)
             {
                 status = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
