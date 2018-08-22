@@ -159,6 +159,7 @@ namespace GtmExtension
 
         public void VsTextViewCreated(IVsTextView textView)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             Initialize();
 
             IWpfTextView wpfTextView = editor.GetWpfTextView(textView);
@@ -170,14 +171,17 @@ namespace GtmExtension
         }
         private void WpfTextView_GotAggregateFocus(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             Update(GetFilePath((ITextView)sender));
         }
         private void WpfTextView_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             Update(GetFilePath((ITextView)sender));
         }
         private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             Update(GetFilePath(e.TextView));
         }
         private void DocumentEvents_DocumentSaved(Document Document)
@@ -233,6 +237,8 @@ namespace GtmExtension
         }
         private void Update(string path, bool force = false)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             var time = DateTime.Now;
             if (force ||
                 time - lastUpdate >= updateInterval ||
