@@ -55,26 +55,55 @@ namespace GtmExtension
 
         #region Helper Functions
 
-        /// <summary>
-        /// Checks if executable <paramref name="exeName"/> can be found in system's PATH.
-        /// </summary>
-        /// <seealso href="https://stackoverflow.com/a/24405838/9080566"/>
-        public static bool ExistsOnPath(string exeName)
+        private static Process ExecuteProcess(string exeName, string arguments)
         {
             try
             {
                 var p = new Process();
                 p.StartInfo.UseShellExecute = false;
-                p.StartInfo.FileName = "where";
-                p.StartInfo.Arguments = exeName;
+                p.StartInfo.FileName = exeName;
+                p.StartInfo.Arguments = arguments;
+                p.StartInfo.CreateNoWindow = true;
+                p.StartInfo.RedirectStandardOutput = true;
                 p.Start();
                 p.WaitForExit();
-                return p.ExitCode == 0;
+                return p;
             }
             catch (Win32Exception)
             {
-                throw new Exception("Command 'where' was not found.");
+                throw new Exception($"Executable \"{exeName}\" was not found.");
             }
+        }
+        private static int Execute(string exeName, string arguments = null)
+        {
+            return ExecuteProcess(exeName, arguments).ExitCode;
+        }
+        private static string ExecuteForOutput(string exeName, string arguments = null)
+        {
+            Process p = ExecuteProcess(exeName, arguments);
+            return p.StandardOutput.ReadToEnd();
+        }
+
+        /// <summary>
+        /// Checks if executable <paramref name="exeName"/> can be found in system's PATH.
+        /// </summary>
+        /// <seealso href="https://stackoverflow.com/a/24405838/9080566"/>
+        private static bool ExistsOnPath(string exeName)
+        {
+            return Execute("where", exeName) == 0;
+        }
+
+        private async Task ShowErrorAsync(string message)
+        {
+            // Switch to UI thread.
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            // Show message box.
+            var uiShell = (IVsUIShell)await GetServiceAsync(typeof(SVsUIShell));
+            if (uiShell == null) { return; }
+            Guid clsid = Guid.Empty;
+            ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(0, ref clsid, "GtmExtension", message, string.Empty, 0,
+                OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out var result));
         }
 
         #endregion
@@ -98,18 +127,37 @@ namespace GtmExtension
 
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
-            await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            // Show error, if we didn't find `gtm` on PATH.
+            // Show error if we don't find `gtm` on PATH.
             if (gtmExe == null)
             {
-                var uiShell = (IVsUIShell)await GetServiceAsync(typeof(SVsUIShell));
-                if (uiShell == null) { return; }
-                Guid clsid = Guid.Empty;
-                int result;
-                ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(0, ref clsid, "GtmPackage", "We couldn't find gtm executable.", string.Empty, 0,
-                    OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out result));
+                await ShowErrorAsync("We couldn't find gtm executable.");
+                return;
             }
+
+            // Verify version.
+            if (!ExecuteForOutput(gtmExe, "verify \">= 1.1.0\"").Contains("true"))
+            {
+                await ShowErrorAsync("Old version of gtm is installed. Please install at least version 1.1.0");
+                return;
+            }
+
+            // Show info in status bar.
+
+            // Get the status bar.
+            var statusBar = (IVsStatusbar)await GetServiceAsync(typeof(SVsStatusbar));
+            if (statusBar == null) { throw new InvalidOperationException("No status bar."); }
+
+            // Unfroze it if it's frozen.
+            ErrorHandler.ThrowOnFailure(statusBar.IsFrozen(out var frozen));
+            if (frozen != 0)
+            {
+                ErrorHandler.ThrowOnFailure(statusBar.FreezeOutput(0));
+            }
+
+            // TODO.
+            statusBar.SetText("We control the status bar now!");
         }
 
         #endregion
