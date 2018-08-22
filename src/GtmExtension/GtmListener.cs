@@ -92,7 +92,11 @@ namespace GtmExtension
 
         private string GetFilePath(ITextView textView)
         {
-            return textView.TextBuffer.Properties.GetProperty<ITextDocument>(typeof(ITextDocument)).FilePath;
+            if (textView.TextBuffer.Properties.TryGetProperty(typeof(ITextDocument), out ITextDocument doc))
+            {
+                return doc.FilePath;
+            }
+            return null;
         }
 
         private void GetService<T>(ref T field) { field = GetService<T>(); }
@@ -237,6 +241,8 @@ namespace GtmExtension
         }
         private void Update(string path, bool force = false)
         {
+            if (path == null) { return; }
+
             ThreadHelper.ThrowIfNotOnUIThread();
 
             var time = DateTime.Now;
