@@ -10,7 +10,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Process = System.Diagnostics.Process;
@@ -42,13 +41,15 @@ namespace GtmExtension
     [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)] // Load the extension when a solution is open.
     public sealed class GtmPackage : AsyncPackage
     {
-        private string gtmExe;
+        private string gtmExe, prevPath, status;
         private IVsStatusbar statusBar;
         private IVsEditorAdaptersFactoryService editor;
         private WindowEvents windowEvents;
         private DocumentEvents documentEvents;
         private IVsTextManager textManager;
         private IWpfTextView wpfTextView;
+        private DateTime lastUpdate;
+        private static readonly TimeSpan updateInterval = TimeSpan.FromSeconds(30.0);
 
         /// <summary>
         /// GtmPackage GUID string.
@@ -229,9 +230,25 @@ namespace GtmExtension
         {
             Update(Document.FullName);
         }
-        private void Update(string path, [CallerMemberName] string message = null)
+        private void Update(string path)
         {
-            statusBar.SetText(message + ": " + path + " (" + DateTime.Now.ToString("o") + ").");
+            var time = DateTime.Now;
+            if (time - lastUpdate >= updateInterval ||
+                path != prevPath)
+            {
+                status = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    statusBar.SetText($"GTM: {status}*");
+                }
+
+                prevPath = path;
+            }
+            else if (!string.IsNullOrWhiteSpace(status))
+            {
+                statusBar.SetText($"GTM: {status}");
+            }
+            lastUpdate = time;
         }
         #endregion
     }
