@@ -2,6 +2,8 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -33,6 +35,8 @@ namespace GtmExtension
     [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)] // Load the extension when a solution is open.
     public sealed class GtmPackage : AsyncPackage
     {
+        private string gtmExe;
+
         /// <summary>
         /// GtmPackage GUID string.
         /// </summary>
@@ -49,6 +53,32 @@ namespace GtmExtension
             // initialization is the Initialize method.
         }
 
+        #region Helper Functions
+
+        /// <summary>
+        /// Checks if executable <paramref name="exeName"/> can be found in system's PATH.
+        /// </summary>
+        /// <seealso href="https://stackoverflow.com/a/24405838/9080566"/>
+        public static bool ExistsOnPath(string exeName)
+        {
+            try
+            {
+                var p = new Process();
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.FileName = "where";
+                p.StartInfo.Arguments = exeName;
+                p.Start();
+                p.WaitForExit();
+                return p.ExitCode == 0;
+            }
+            catch (Win32Exception)
+            {
+                throw new Exception("Command 'where' was not found.");
+            }
+        }
+
+        #endregion
+
         #region Package Members
 
         /// <summary>
@@ -60,17 +90,26 @@ namespace GtmExtension
         /// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
+            // Try to find executable `gtm`.
+            if (ExistsOnPath("gtm"))
+            {
+                gtmExe = "gtm";
+            }
+
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            // Show test message box.
-            var uiShell = (IVsUIShell)await GetServiceAsync(typeof(SVsUIShell));
-            if (uiShell == null) { return; }
-            Guid clsid = Guid.Empty;
-            int result;
-            ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(0, ref clsid, "GtmPackage", "Initializing.", string.Empty, 0,
-                OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_INFO, 0, out result));
+            // Show error, if we didn't find `gtm` on PATH.
+            if (gtmExe == null)
+            {
+                var uiShell = (IVsUIShell)await GetServiceAsync(typeof(SVsUIShell));
+                if (uiShell == null) { return; }
+                Guid clsid = Guid.Empty;
+                int result;
+                ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(0, ref clsid, "GtmPackage", "We couldn't find gtm executable.", string.Empty, 0,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out result));
+            }
         }
 
         #endregion
