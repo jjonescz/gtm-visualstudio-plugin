@@ -253,7 +253,7 @@ namespace GtmExtension
                 status = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
                 if (!string.IsNullOrWhiteSpace(status))
                 {
-                    AppendToWindowTitle($"[GTM: {status}*]");
+                    AppendToWindowTitle($"[GTM: {status}]");
                 }
 
                 prevPath = path;
