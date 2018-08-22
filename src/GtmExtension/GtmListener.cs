@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.Utilities;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.Windows;
 using Process = System.Diagnostics.Process;
 
 namespace GtmExtension
@@ -21,7 +22,8 @@ namespace GtmExtension
     public sealed class GtmListener : IVsTextViewCreationListener
     {
         private bool initialized;
-        private string gtmExe, prevPath, status;
+        private string gtmExe, prevPath, status, prevCaption;
+        private int index;
         private DateTime lastUpdate;
         private IVsEditorAdaptersFactoryService editor;
         private DocumentEvents documentEvents;
@@ -80,6 +82,8 @@ namespace GtmExtension
 
         private void ShowError(string message)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             // Show message box.
             Guid clsid = Guid.Empty;
             ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(0, ref clsid, "GtmExtension", message, string.Empty, 0,
@@ -100,6 +104,55 @@ namespace GtmExtension
             return (I)service;
         }
 
+        private static readonly bool appendToStatusbar = true;
+        private static readonly bool prepend = true;
+        private string Title
+        {
+            get
+            {
+                ThreadHelper.ThrowIfNotOnUIThread();
+
+                if (appendToStatusbar)
+                {
+                    statusbar.GetText(out var text);
+                    return text;
+                }
+                return Application.Current.MainWindow.Title;
+            }
+            set
+            {
+                ThreadHelper.ThrowIfNotOnUIThread();
+
+                if (appendToStatusbar)
+                {
+                    statusbar.SetText(value);
+                }
+                else
+                {
+                    Application.Current.MainWindow.Title = value;
+                }
+            }
+        }
+        private void AppendToWindowTitle(string title)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            var format = prepend ? "{1} {0}" : "{0} {1}";
+            var caption = Title;
+            if (caption == prevCaption)
+            {
+                if (prepend) { caption = caption.Substring(prevCaption.Length - index); }
+                else { caption = caption.Substring(0, index); }
+
+                Title = prevCaption = string.Format(format, caption, title);
+            }
+            else
+            {
+                index = caption.Length;
+                Title = prevCaption = string.Format(format, caption, title);
+            }
+        }
+
         #endregion
 
         #region Event handlers
@@ -108,7 +161,7 @@ namespace GtmExtension
         {
             Initialize();
 
-            var wpfTextView = editor.GetWpfTextView(textView);
+            IWpfTextView wpfTextView = editor.GetWpfTextView(textView);
             wpfTextView.LayoutChanged += WpfTextView_LayoutChanged;
             wpfTextView.Caret.PositionChanged += Caret_PositionChanged;
 
@@ -124,6 +177,7 @@ namespace GtmExtension
         }
         private void DocumentEvents_DocumentSaved(Document Document)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             Update(Document.FullName, force: true);
         }
 
@@ -133,6 +187,8 @@ namespace GtmExtension
         {
             if (initialized) { return; }
             initialized = true;
+
+            ThreadHelper.ThrowIfNotOnUIThread();
 
             // Get services.
             GetService(ref uiShell);
@@ -180,14 +236,14 @@ namespace GtmExtension
                 status = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
                 if (!string.IsNullOrWhiteSpace(status))
                 {
-                    statusbar.SetText($"GTM: {status}*");
+                    AppendToWindowTitle($"[GTM: {status}*]");
                 }
 
                 prevPath = path;
             }
             else if (!string.IsNullOrWhiteSpace(status))
             {
-                statusbar.SetText($"GTM: {status}");
+                AppendToWindowTitle($"[GTM: {status}]");
             }
             lastUpdate = time;
         }
