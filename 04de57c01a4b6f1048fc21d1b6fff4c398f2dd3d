@@ -1,0 +1,4 @@
+[ver:1,total:3300]
+src/GtmExtension/GtmListener.cs:3260,1535310000:1160,1535313600:2100,m
+.gitignore:20,1535310000:20,r
+.git/hooks/post-commit:20,1535310000:20,r
