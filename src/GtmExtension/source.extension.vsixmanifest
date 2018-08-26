@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="GtmExtension.78062a42-0a99-47d0-a6e2-200a84959b52" Version="1.1" Language="en-US" Publisher="Jan Joneš" />
+        <Identity Id="GtmExtension.78062a42-0a99-47d0-a6e2-200a84959b52" Version="1.2" Language="en-US" Publisher="Jan Joneš" />
         <DisplayName>GtmExtension</DisplayName>
         <Description>Empty VSIX Project.</Description>
     </Metadata>
