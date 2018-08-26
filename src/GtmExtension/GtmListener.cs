@@ -11,8 +11,12 @@ using Microsoft.VisualStudio.Utilities;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using Process = System.Diagnostics.Process;
+using Task = System.Threading.Tasks.Task;
 
 namespace GtmExtension
 {
@@ -239,7 +243,7 @@ namespace GtmExtension
             documentEvents = dte.Events.DocumentEvents;
             documentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
         }
-        private void Update(string path, bool force = false)
+        private void Update(string path, bool force = false, [CallerMemberName] string caller = null)
         {
             if (path == null) { return; }
 
@@ -250,13 +254,26 @@ namespace GtmExtension
                 time - lastUpdate >= updateInterval ||
                 path != prevPath)
             {
-                status = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
-                if (!string.IsNullOrWhiteSpace(status))
-                {
-                    AppendToWindowTitle($"[GTM: {status}]");
-                }
-
                 prevPath = path;
+#if DEBUG
+                var sw = Stopwatch.StartNew();
+#endif
+                Task.Run(async () =>
+                {
+                    // This will run in background thread.
+                    status = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
+
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                    if (!string.IsNullOrWhiteSpace(status))
+                    {
+                        AppendToWindowTitle($"[GTM: {status}]");
+                    }
+#if DEBUG
+                    sw.Stop();
+                    Debug.WriteLine($"Updated {Path.GetFileName(path)} from {caller} in {sw.Elapsed}.");
+#endif
+                });
             }
             else if (!string.IsNullOrWhiteSpace(status))
             {
