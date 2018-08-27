@@ -260,12 +260,12 @@ namespace GtmExtension
 #endif
                 Task.Run(async () =>
                 {
-                    // This will run in background thread.
-                    status = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
+                    // This will run in a background thread.
+                    var result = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
 
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                    if (!string.IsNullOrWhiteSpace(status))
+                    if (!string.IsNullOrWhiteSpace(status = result))
                     {
                         AppendToWindowTitle($"[GTM: {status}]");
                     }
