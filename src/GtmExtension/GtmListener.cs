@@ -11,9 +11,8 @@ using Microsoft.VisualStudio.Utilities;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Windows;
 using Process = System.Diagnostics.Process;
 using Task = System.Threading.Tasks.Task;
@@ -26,6 +25,7 @@ namespace GtmExtension
     public sealed class GtmListener : IVsTextViewCreationListener
     {
         private bool initialized;
+        private int executingGtm; // only 0 or 1
         private string gtmExe, prevPath, status, prevCaption;
         private int index;
         private DateTime lastUpdate;
@@ -260,15 +260,24 @@ namespace GtmExtension
 #endif
                 Task.Run(async () =>
                 {
-                    // This will run in a background thread.
-                    var result = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
+                    // Make sure that only one process is running at any given time.
+                    if (Interlocked.Exchange(ref executingGtm, 1) == 1)
+                    {
+                        return;
+                    }
+
+                    // This will run in a background thread. Note that there is no data race
+                    // since we are the only thread writing to variable `status`.
+                    status = ExecuteForOutput(gtmExe, $"record --status \"{path}\"");
 
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                    if (!string.IsNullOrWhiteSpace(status = result))
+                    if (!string.IsNullOrWhiteSpace(status))
                     {
                         AppendToWindowTitle($"[GTM: {status}]");
                     }
+
+                    executingGtm = 0;
 #if DEBUG
                     sw.Stop();
                     Debug.WriteLine($"Updated {Path.GetFileName(path)} from {caller} in {sw.Elapsed}.");
