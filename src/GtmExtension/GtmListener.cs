@@ -16,6 +16,10 @@ using System.Threading;
 using System.Windows;
 using Process = System.Diagnostics.Process;
 using Task = System.Threading.Tasks.Task;
+#if DEBUG
+using System.Diagnostics;
+using System.IO;
+#endif
 
 namespace GtmExtension
 {
