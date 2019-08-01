@@ -262,7 +262,7 @@ namespace GtmExtension
 #if DEBUG
                 var sw = Stopwatch.StartNew();
 #endif
-                Task.Run(async () =>
+                var _ = Task.Run(async () =>
                 {
                     // Make sure that only one process is running at any given time.
                     if (Interlocked.Exchange(ref executingGtm, 1) == 1)
