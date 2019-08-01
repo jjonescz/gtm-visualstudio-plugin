@@ -225,7 +225,7 @@ namespace GtmExtension
             }
             else
             {
-                ShowError("We couldn't find gtm executable.");
+                ShowError("Executable gtm could not be found.");
                 return;
             }
 
@@ -236,14 +236,14 @@ namespace GtmExtension
                 return;
             }
 
-            // Unfroze status bar if it's frozen.
+            // Unfreeze status bar if it's frozen.
             ErrorHandler.ThrowOnFailure(statusbar.IsFrozen(out var frozen));
             if (frozen != 0)
             {
                 ErrorHandler.ThrowOnFailure(statusbar.FreezeOutput(0));
             }
 
-            // Subscribe to events. We keep the events object so that it doesn't get GC'ed.
+            // Subscribe to events. We keep the event's object so that it doesn't get GC'ed.
             documentEvents = dte.Events.DocumentEvents;
             documentEvents.DocumentSaved += DocumentEvents_DocumentSaved;
         }
