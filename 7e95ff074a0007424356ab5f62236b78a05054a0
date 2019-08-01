@@ -1,0 +1,6 @@
+[ver:1,total:540]
+src/GtmExtension/GtmListener.cs:240,1564675200:180,1564686000:60,r
+src/GtmExtension/packages.config:120,1564686000:60,1564689600:60,m
+README.md:90,1564686000:90,r
+src/GtmExtension/GtmExtension.csproj:75,1564686000:30,1564689600:45,m
+src/GtmExtension/app.config:15,1564689600:15,m
