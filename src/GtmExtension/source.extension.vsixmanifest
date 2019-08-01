@@ -3,7 +3,8 @@
     <Metadata>
         <Identity Id="GtmExtension.78062a42-0a99-47d0-a6e2-200a84959b52" Version="1.4" Language="en-US" Publisher="Jan Joneš" />
         <DisplayName>GtmExtension</DisplayName>
-        <Description>Empty VSIX Project.</Description>
+        <Description xml:space="preserve">Git Time Metric plugin for Visual Studio</Description>
+        <Tags>gtm; git-time-metric</Tags>
     </Metadata>
     <Installation>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0, 17.0)" />

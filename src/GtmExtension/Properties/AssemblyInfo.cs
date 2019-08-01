@@ -1,16 +1,15 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("GtmExtension")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Git Time Metric plugin for Visual Studio")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Jan Joneš")]
 [assembly: AssemblyProduct("GtmExtension")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyCopyright("Copyright © Jan Joneš 2018–2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
