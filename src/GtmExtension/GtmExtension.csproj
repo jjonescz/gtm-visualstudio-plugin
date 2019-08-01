@@ -65,7 +65,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="index.html" />
     <Content Include="Resources\GtmPackage.ico" />
     <Content Include="stylesheet.css" />
   </ItemGroup>
