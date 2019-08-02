@@ -1,5 +1,6 @@
 # IMPORTANT: Set variable `marketplace.token` to PAT for accessing the Visual
-# Studio Marketplace.
+# Studio Marketplace (with scopes "Marketplace (Acquire); Marketplace
+# (Manage)" and access to all organizations).
 
 trigger:
   batch: true
