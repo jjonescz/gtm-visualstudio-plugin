@@ -17,7 +17,7 @@
     "repo": "https://github.com/jjonescz/gtm-visualstudio-plugin",
     "assetFiles": [
         {
-            "pathOnDisk": "img\\status-bar.png",
+            "pathOnDisk": "..\\img\\status-bar.png",
             "targetPath": "img/status-bar.png"
         }
     ]
