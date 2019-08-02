@@ -6,6 +6,12 @@ status](https://dev.azure.com/jjones/gtm-visualstudio-plugin/_apis/build/status/
 [Git Time Metric](https://github.com/git-time-metric/gtm) plugin for [Visual
 Studio](https://visualstudio.com/).
 
+## Installation
+
+Download a `.vsix` from
+[releases](https://github.com/jjonescz/gtm-visualstudio-plugin/releases) and run
+it.
+
 ## Features
 
 Currently, this plugin only reports your interaction in Visual Studio to
