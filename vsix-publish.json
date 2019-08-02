@@ -18,5 +18,11 @@
     "publisher": "jjones",
     "private": false,
     "qna": true,
-    "repo": "https://github.com/jjonescz/gtm-visualstudio-plugin"
+    "repo": "https://github.com/jjonescz/gtm-visualstudio-plugin",
+    "assetFiles": [
+        {
+            "pathOnDisk": "img\\status-bar.png",
+            "targetPath": "img/status-bar.png"
+        }
+    ]
 }
