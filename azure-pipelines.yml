@@ -11,6 +11,7 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  vsix: '$(Build.SourcesDirectory)\src\GtmExtension\bin\Release\GtmExtension.vsix'
 
 steps:
 - task: NuGetToolInstaller@0
@@ -29,5 +30,16 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)\src\GtmExtension\bin\Release\GtmExtension.vsix' 
+    PathtoPublish: '$(vsix)' 
     ArtifactName: '$(system.teamProject)'
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(Build.SourcesDirectory)\scripts\GetVersion.ps1'
+
+- task: GitHubRelease@0
+  inputs:
+    gitHubConnection: jjonescz
+    repositoryName: jjonescz/gtm-visualstudio-plugin
+    tag: 'v$(vsix.version)'
+    assets: '$(vsix)'
