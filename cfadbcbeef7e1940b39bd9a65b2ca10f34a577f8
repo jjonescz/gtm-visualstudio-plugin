@@ -1,0 +1,5 @@
+[ver:1,total:300]
+src/GtmExtension/source.extension.vsixmanifest:180,1564740000:180,r
+scripts/PublishVsix.ps1:45,1564740000:45,m
+vsix-publish.json:45,1564740000:45,d
+scripts/vsix-publish.json:30,1564740000:30,m
