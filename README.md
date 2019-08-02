@@ -1,5 +1,8 @@
 # GTM Visual Studio plugin
 
+[![Build
+status](https://dev.azure.com/jjones/gtm-visualstudio-plugin/_apis/build/status/gtm-visualstudio-plugin-CI?branchName=master)](https://dev.azure.com/jjones/gtm-visualstudio-plugin/_build/latest?definitionId=21&branchName=master)
+
 [Git Time Metric](https://github.com/git-time-metric/gtm) plugin for [Visual
 Studio](https://visualstudio.com/).
 
