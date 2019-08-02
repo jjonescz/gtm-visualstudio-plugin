@@ -40,5 +40,6 @@ steps:
 - task: GitHubRelease@0
   inputs:
     gitHubConnection: github
+    tagSource: manual
     tag: 'v$(vsix.version)'
     assets: '$(vsix)'
