@@ -9,7 +9,7 @@
         "internalName": "gtm-visualstudio-plugin",
         "language": "en-US"
     },
-    "overview": "README.md",
+    "overview": "../README.md",
     "priceCategory": "free",
     "publisher": "jjones",
     "private": false,
