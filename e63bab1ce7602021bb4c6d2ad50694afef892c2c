@@ -1,0 +1,5 @@
+[ver:1,total:500]
+scripts/GetVersion.ps1:260,1564736400:160,1564740000:100,m
+azure-pipelines.yml:200,1564736400:20,1564740000:180,m
+.vscode/settings.json:20,1564740000:20,m
+vsix-publish.json:20,1564740000:20,m
