@@ -1,0 +1,5 @@
+[ver:1,total:180]
+README.md:90,1564740000:90,r
+vsix-publish.json:66,1564740000:66,m
+src/GtmExtension/source.extension.vsixmanifest:12,1564740000:12,m
+src/GtmExtension/VSPackage.resx:12,1564740000:12,r
