@@ -1,0 +1,4 @@
+[ver:1,total:120]
+vsix-publish.json:60,1564740000:60,m
+README.md:30,1564740000:30,m
+scripts/PublishVsix.ps1:30,1564740000:30,r
