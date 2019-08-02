@@ -6,7 +6,7 @@
         "Team Development"
     ],
     "identity": {
-        "internalName": "gtm.visualstudio.plugin",
+        "internalName": "gtm-visualstudio-plugin",
         "tags": [
             "gtm"
         ],

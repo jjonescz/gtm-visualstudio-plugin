@@ -9,7 +9,7 @@ Studio](https://visualstudio.com/).
 ## Installation
 
 Install "Git Time Metric" from [Visual Studio
-Marketplace](https://marketplace.visualstudio.com/items?itemName=jjones.gtm.visualstudio.plugin).
+Marketplace](https://marketplace.visualstudio.com/items?itemName=jjones.gtm-visualstudio-plugin).
 Alternatively, download a `.vsix` from
 [releases](https://github.com/jjonescz/gtm-visualstudio-plugin/releases) and run
 it.
