@@ -42,4 +42,5 @@ steps:
     gitHubConnection: github
     tagSource: manual
     tag: 'v$(vsix.version)'
+    title: 'Version $(vsix.version)'
     assets: '$(vsix)'
