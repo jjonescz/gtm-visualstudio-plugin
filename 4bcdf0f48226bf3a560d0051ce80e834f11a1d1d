@@ -1,0 +1,4 @@
+[ver:1,total:600]
+src/GtmExtension/source.extension.vsixmanifest:210,1564736400:210,r
+azure-pipelines.yml:200,1564736400:200,m
+scripts/GetVersion.ps1:190,1564736400:190,m
