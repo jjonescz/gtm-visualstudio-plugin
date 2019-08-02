@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json.schemastore.org/vsix-publish",
+    "categories": [
+        "Coding",
+        "Reporting",
+        "Team Development"
+    ],
+    "identity": {
+        "internalName": "gtm.visualstudio.plugin",
+        "tags": [
+            "gtm"
+        ],
+        "language": "en-US"
+    },
+    "overview": "README.md",
+    "priceCategory": "free",
+    "publisher": "jjones",
+    "private": false,
+    "qna": true,
+    "repo": "https://github.com/jjonescz/gtm-visualstudio-plugin"
+}

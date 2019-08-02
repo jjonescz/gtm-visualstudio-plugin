@@ -1,3 +1,6 @@
+# IMPORTANT: Set variable `marketplace.token` to PAT for accessing the Visual
+# Studio Marketplace.
+
 trigger:
   batch: true
   branches:
@@ -44,3 +47,9 @@ steps:
     tag: 'v$(vsix.version)'
     title: 'Version $(vsix.version)'
     assets: '$(vsix)'
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(Build.SourcesDirectory)\scripts\PublishVsix.ps1'
+    env:
+      MARKETPLACE_TOKEN: $(marketplace.token)
