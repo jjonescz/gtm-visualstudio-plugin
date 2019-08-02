@@ -1,0 +1,6 @@
+[ver:1,total:1000]
+vsix-publish.json:418,1564736400:294,1564740000:124,r
+scripts/PublishVsix.ps1:284,1564736400:184,1564740000:100,r
+README.md:252,1564736400:222,1564740000:30,m
+.vscode/settings.json:26,1564740000:26,r
+src/GtmExtension/source.extension.vsixmanifest:20,1564736400:20,r
