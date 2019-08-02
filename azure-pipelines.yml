@@ -39,7 +39,6 @@ steps:
 
 - task: GitHubRelease@0
   inputs:
-    gitHubConnection: jjonescz
-    repositoryName: jjonescz/gtm-visualstudio-plugin
+    gitHubConnection: github
     tag: 'v$(vsix.version)'
     assets: '$(vsix)'
