@@ -2,6 +2,7 @@
 /.vs/
 bin/
 obj/
+*proj.user
 
 # NuGet
 /packages/
